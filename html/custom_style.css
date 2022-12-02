@@ -1,0 +1,60 @@
+    p {
+      margin: 0px;
+    }
+    h1 {
+      margin: 0px;
+    }
+    h2 {
+      margin: 0px;
+    }
+    h3 {
+      margin: 0px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0px;
+    }
+    body {
+      background-color: transparent;
+      transform: perspective(1400px) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      transform-style: preserve-3d;
+    }
+    .gwd-img-vtjv {
+      position: absolute;
+      left: 0%;
+      top: 5.51%;
+      width: 100%;
+      height: 57%;
+    }
+    .gwd-img-1lq0 {
+      position: absolute;
+      width: 8%;
+      height: 10%;
+      left: 2.49%;
+      top: 8.27%;
+    }
+    .gwd-img-p007 {
+      position: absolute;
+      width: 5%;
+      height: 5%;
+      left: 10.44%;
+      top: 31.5%;
+    }
+    .gwd-img-q8gm {
+      top: 45.08%;
+    }
+    .gwd-img-i7rh {
+      top: 31.5%;
+      left: 40.34%;
+    }
+    .gwd-img-3xdb {
+      top: 45.08%;
+    }
+    .gwd-img-1xat {
+      left: 67.76%;
+    }
+    .gwd-img-wwx2 {
+      top: 31.5%;
+    }

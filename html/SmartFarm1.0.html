@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Google Web Designer 1.7.0.1114">
+  <meta name="templateERR_FILE_NOT_FOUNDERR_FILE_NOT_FOUND" content="Banner 3.0.0">
+  <meta name="environment" content="gwd-doubleclick">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="gwdpage_style.css" rel="stylesheet" data-version="8" data-exports-type="gwd-page">
+  <link href="gwdpagedeck_style.css" rel="stylesheet" data-version="9" data-exports-type="gwd-pagedeck">
+  <link href="gwddoubleclick_style.css" rel="stylesheet" data-version="14" data-exports-type="gwd-doubleclick">
+  <link href="gwdimage_style.css" rel="stylesheet" data-version="9" data-exports-type="gwd-image">
+  <link href="custom_style.css" rel="stylesheet" data-version="9" type="text/css">
+  <script data-source="googbase_min.js" data-version="3" data-exports-type="googbase" src="googbase_min.js"></script>
+  <script data-source="gwd_webcomponents_min.js" data-version="5" data-exports-type="gwd_webcomponents" src="gwd_webcomponents_min.js"></script>
+  <script data-source="gwdpage_min.js" data-version="8" data-exports-type="gwd-page" src="gwdpage_min.js"></script>
+  <script data-source="gwdpagedeck_min.js" data-version="9" data-exports-type="gwd-pagedeck" src="gwdpagedeck_min.js"></script>
+  <script data-source="gwddoubleclick_min.js" data-version="14" data-exports-type="gwd-doubleclick" src="gwddoubleclick_min.js"></script>
+  <script data-source="gwdimage_min.js" data-version="9" data-exports-type="gwd-image" src="gwdimage_min.js"></script>
+  <script type="text/javascript" gwd-events="support" src="gwd-events-support.1.0.js"></script>
+  <script type="text/javascript" src="/webiopi.js"></script>
+  
+  <script type="text/javascript">
+    var engineArray = {waterPumpGpioPort:21};
+
+    var onOffButtonArray = {buttonName:"OnOffButton",  waterDelay:900, onImage:"on_button-image", offImage:"off_button-image", autoImage:"auto_button-image"};
+    
+    var valveArray = [{valveName:"WaterValve1", valvePort:11, valveImage:"Water_Droplet_Image_1", waterImage:"Watering_Image_1", executionOrder:1},
+		      {valveName:"WaterValve2", valvePort:5, valveImage:"Water_Droplet_Image_2", waterImage:"Watering_Image_2", executionOrder:2},
+		      {valveName:"WaterValve3", valvePort:6, valveImage:"Water_Droplet_Image_3", waterImage:"Watering_Image_3", executionOrder:3},
+		      {valveName:"WaterValve4", valvePort:13, valveImage:"Water_Droplet_Image_4", waterImage:"Watering_Image_4", executionOrder:1},
+		      {valveName:"WaterValve5", valvePort:19, valveImage:"Water_Droplet_Image_5", waterImage:"Watering_Image_5", executionOrder:2},
+		      {valveName:"WaterValve6", valvePort:26, valveImage:"Water_Droplet_Image_6", waterImage:"Watering_Image_6", executionOrder:3}];
+						
+     webiopi().ready(function() {
+				var isMachineInitialed = false;
+				webiopi().callMacro("InitialMachine", [engineArray.waterPumpGpioPort] , function(acro, args, data){isMachineInitialed = true;});			
+				
+				//Add valves
+				//To ensure all input are set
+				var index;
+				var valveAddedCount = 0;
+				var valveLen = valveArray.length;
+				for(index = 0; index < valveLen; index++)
+				{
+					webiopi().callMacro("AddWaterValve", [valveArray[index].valveName, valveArray[index].valvePort, valveArray[index].executionOrder] , function(acro, args, data){valveAddedCount++;});
+				}
+				
+				//Wait until all water object initial complete				
+				var waterAllSetHandle = setInterval( function()
+								      {
+									      if(isMachineInitialed && (valveAddedCount == valveLen))
+									      {
+										      UpdateAutoModeStatus();
+										      clearInterval(waterAllSetHandle);
+									      }
+								      }, 1000);
+															
+					
+				
+
+                // Refresh GPIO buttonsWatering_Image_1
+                // pass true to refresh repeatedly of false to refresh once
+                webiopi().refreshGPIO(true);
+        });
+	
+	function UpdateValveStateCallback(macro, args, data)
+	{
+	  UpdateValveState(args, data);
+	}
+	
+	
+	function OpenValve(valveName)
+	{
+	    window.alert("Open vWatering_Image_1alve call");
+	    webiopi().callMacro("OpenValve", valveName, OpenValveCallback);
+	}
+		
+	function CloseValve(valveName)
+	{
+	    window.alert("Close valve call");
+	    webiopi().callMacro("CloseValve", valveName, CloseValveCallback);											
+			
+	}
+		
+      	function OpenValveCallback(macro, args, data)
+	{
+	    if(data == 2)
+	    {
+		window.alert("Open valve error!");
+	    }
+	    UpdateValveState(args,data);
+			
+	    webiopi().callMacro("IsMachineOpennig", [], function(lMacro, lAargs, lData)
+							{
+							  if(lData)
+							  {
+							    gwd.actions.events.setInlineStyle(onOffButtonArray.autoImage, 'visibility: hidden; ');
+							    gwd.actions.events.setInlineStyle(onOffButtonArray.onImage, 'visibility: visible; ');
+							    gwd.actions.events.setInlineStyle(onOffButtonArray.offImage, 'visibility: hidden; ');
+																				
+							  }
+				   });
+	}
+		
+	  function CloseValveCallback(macro, args, data)
+	  {
+	      if(data == 2)
+	      {
+		window.alert("Close valve error!");
+	      }
+	      UpdateValveState(args,data);
+				
+	      webiopi().callMacro("IsMachineClosing", [], function(lMacro, lAargs, lData)
+							  {
+							    if(lData)
+							    {
+							      gwd.actions.events.setInlineStyle(onOffButtonArray.autoImage, 'visibility: hidden; ');
+							      gwd.actions.events.setInlineStyle(onOffButtonArray.onImage, 'visibility: hidden; ');
+								    gwd.actions.events.setInlineStyle(onOffButtonArray.offImage, 'visibility: visible; ');
+							    }
+							  });			
+	  }
+		
+	  function UpdateValveState(valveName, state)
+	  {
+			
+			var valveLength = valveArray.length;
+			var index;
+
+			for(index = 0; index < valveLength; index++)
+			{
+				if(valveArray[index].valveName == valveName)
+				{	
+					if(state == 1)
+					{
+						gwd.actions.events.setInlineStyle(valveArray[index].waterImage, 'visibility: visible; ');
+						gwd.actions.events.setInlineStyle(valveArray[index].valveImage, 'visibility: hidden; ');
+					}
+					else
+					{
+						gwd.actions.events.setInlineStyle(valveArray[index].waterImage, 'visibility: hidden; ');
+						gwd.actions.events.setInlineStyle(valveArray[index].valveImage, 'visibility: visible; ');
+					}
+					return;
+				}
+			}
+	    }
+
+	    function UpdateAutoModeStatus()
+	    {
+		var UpdateAutoModeStatusHandle = setInterval(function()
+							      {
+								webiopi().callMacro("IsAutoModeRunning", 
+										      [], 
+										      function(acro, args, data)
+										      {
+											if(data == false)
+											{
+											  //Incase of running completed and running error
+											  webiopi().callMacro("IsAutoModeError", 
+													      [], 
+													      function(acro, args, data)
+													      {
+														if(data)
+														{
+														  window.alert("Auto mode failed. The engine ran off. Please try again!");
+														}
+													       });
+													       
+											    gwd.actions.events.setInlineStyle(onOffButtonArray.onImage, 'visibility: hidden; ');
+											    gwd.actions.events.setInlineStyle(onOffButtonArray.autoImage, 'visibility: hidden; ');
+											    gwd.actions.events.setInlineStyle(onOffButtonArray.offImage, 'visibility: visible; ');
+											    clearInterval(UpdateAutoModeStatusHandle);
+											  }
+												
+											  var index;
+											  var valveLen = valveArray.length;
+											  for(index = 0; index < valveLen; index++)
+											  {
+												  webiopi().callMacro("GetValveState", valveArray[index].valveName, UpdateValveStateCallback);
+											  }
+																	  
+											});
+							    }, 3000);
+	    }	
+  </script>
+  
+  <script type="text/javascript" gwd-events="handlers">
+    window.gwd = window.gwd || {};
+    
+     gwd.OffImageClick = function(event) {	
+		webiopi().callMacro("ExecutionAuto", [onOffButtonArray.waterDelay, 1], null);
+		gwd.actions.events.setInlineStyle(onOffButtonArray.autoImage, 'visibility: visible; ');
+		gwd.actions.events.setInlineStyle(onOffButtonArray.onImage, 'visibility: hidden; ');
+		gwd.actions.events.setInlineStyle(onOffButtonArray.offImage, 'visibility: hidden; ');																
+		UpdateAutoModeStatus();
+    };
+    
+    gwd.OnImageClick = function(event) {
+		webiopi().callMacro('StopWaterPump', null, null);
+		gwd.actions.events.setInlineStyle(onOffButtonArray.autoImage, 'visibility: hidden; ');
+		gwd.actions.events.setInlineStyle(onOffButtonArray.onImage, 'visibility: hidden; ');
+		gwd.actions.events.setInlineStyle(onOffButtonArray.offImage, 'visibility: visible; ');
+    };
+    
+    gwd.AutoImageClick = function(event) {
+	
+    };  
+    
+    gwd.WaterValve1OpenClick = function(event) {
+
+		OpenValve(valveArray[0].valveName);
+		
+    };
+    
+    gwd.WaterValve1CloseClick = function(event) {
+	
+		CloseValve(valveArray[0].valveName);
+		
+    };
+    
+    gwd.WaterValve2OpenClick = function(event) 
+    {
+		OpenValve(valveArray[1].valveName);
+    };
+    
+    gwd.WaterValve2CloseClick = function(event) 
+    {
+		CloseValve(valveArray[1].valveName);
+    };
+
+    gwd.WaterValve3OpenClick = function(event) 
+    {
+		OpenValve(valveArray[2].valveName);
+    };
+    
+    gwd.WaterValve3CloseClick = function(event) 
+    {  
+	CloseValve(valveArray[2].valveName);
+    };
+
+
+    gwd.WaterValve4OpenClick = function(event) 
+    {
+	OpenValve(valveArray[3].valveName);
+    };
+    
+    gwd.WaterValve4CloseClick = function(event) 
+    {
+	CloseValve(valveArray[3].valveName);
+    };
+	
+	
+    gwd.WaterValve5OpenClick = function(event) 
+    {
+	  OpenValve(valveArray[4].valveName);
+    };
+    
+    gwd.WaterValve5CloseClick = function(event) 
+    {
+	  CloseValve(valveArray[4].valveName);
+    };
+
+	
+    gwd.WaterValve6OpenClick = function(event) 
+    {
+	  OpenValve(valveArray[5].valveName);
+    };
+    
+    gwd.WaterValve6CloseClick = function(event) 
+    {
+	  CloseValve(valveArray[5].valveName);
+    };
+    
+
+  </script>
+  
+  <script type="text/javascript" gwd-events="registration">
+      // Support code for event handling in Google Web Designer
+     // This script block is auto-generated. Please do not edit!
+      gwd.actions.events.registerEventHandlers = function(event) {
+      gwd.actions.events.addHandler(onOffButtonArray.offImage, 'click', gwd.OffImageClick, false);
+      gwd.actions.events.addHandler(onOffButtonArray.onImage, 'click', gwd.OnImageClick, false);
+      gwd.actions.events.addHandler(onOffButtonArray.autoImage, 'click', gwd.AutoImageClick, false);
+	  
+	  
+      gwd.actions.events.addHandler(valveArray[0].valveImage, 'click', gwd.WaterValve1OpenClick, false);
+      gwd.actions.events.addHandler(valveArray[0].waterImage, 'click', gwd.WaterValve1CloseClick, false);
+      
+      gwd.actions.events.addHandler(valveArray[1].valveImage, 'click', gwd.WaterValve2OpenClick, false);
+      gwd.actions.events.addHandler(valveArray[1].waterImage, 'click', gwd.WaterValve2CloseClick, false);
+      
+      gwd.actions.events.addHandler(valveArray[2].valveImage, 'click', gwd.WaterValve3OpenClick, false);
+      gwd.actions.events.addHandler(valveArray[2].waterImage, 'click', gwd.WaterValve3CloseClick, false);
+      
+      gwd.actions.events.addHandler(valveArray[3].valveImage, 'click', gwd.WaterValve4OpenClick, false);
+      gwd.actions.events.addHandler(valveArray[3].waterImage, 'click', gwd.WaterValve4CloseClick, false);
+      
+      gwd.actions.events.addHandler(valveArray[4].valveImage, 'click', gwd.WaterValve5OpenClick, false);
+      gwd.actions.events.addHandler(valveArray[4].waterImage, 'click', gwd.WaterValve5CloseClick, false);
+     
+      gwd.actions.events.addHandler(valveArray[5].valveImage, 'click', gwd.WaterValve6OpenClick, false);
+      gwd.actions.events.addHandler(valveArray[5].waterImage, 'click', gwd.WaterValve6CloseClick, false);
+
+ 
+	};
+	
+	  gwd.actions.events.deregisterEventHandlers = function(event) {
+	  gwd.actions.events.removeHandler(onOffButtonArray.offImage, 'click', gwd.OffImageClick, false);
+	  gwd.actions.events.removeHandler(onOffButtonArray.onImage, 'click', gwd.OnImageClick, false);
+	  gwd.actions.events.removeHandler(onOffButtonArray.autoImage, 'click', gwd.AutoImageClick, false);
+	  
+	  
+	  gwd.actions.events.removeHandler(valveArray[0].valveImage, 'click', gwd.WaterValve1OpenClick, false);
+	  gwd.actions.events.removeHandler(valveArray[0].waterImage, 'click', gwd.WaterValve1CloseClick, false);
+
+	  gwd.actions.events.removeHandler(valveArray[1].valveImage, 'click', gwd.WaterValve2OpenClick, false);
+	  gwd.actions.events.removeHandler(valveArray[1].waterImage, 'click', gwd.WaterValve2CloseClick, false);
+	  
+	  gwd.actions.events.removeHandler(valveArray[2].valveImage, 'click', gwd.WaterValve3OpenClick, false);
+	  gwd.actions.events.removeHandler(valveArray[2].waterImage, 'click', gwd.WaterValve3CloseClick, false);
+	  
+	  gwd.actions.events.removeHandler(valveArray[3].valveImage, 'click', gwd.WaterValve4OpenClick, false);
+	  gwd.actions.events.removeHandler(valveArray[3].waterImage, 'click', gwd.WaterValve4CloseClick, false);
+	  
+	  gwd.actions.events.removeHandler(valveArray[4].valveImage, 'click', gwd.WaterValve5OpenClick, false);
+	  gwd.actions.events.removeHandler(valveArray[4].waterImage, 'click', gwd.WaterValve5CloseClick, false);
+	
+	  gwd.actions.events.removeHandler(valveArray[5].valveImage, 'click', gwd.WaterValve6OpenClick, false);
+	  gwd.actions.events.removeHandler(valveArray[5].waterImage, 'click', gwd.WaterValve6CloseClick, false);
+	  
+      
+    };  
+    document.addEventListener("DOMContentLoaded", gwd.actions.events.registerEventHandlers);
+    document.addEventListener("unload", gwd.actions.events.deregisterEventHandlers);
+  </script>
+</head>
+
+<body>
+    
+  <img src="assets/Land.jpg" id="Land" class="gwd-img-vtjv">
+  <img src="assets/OnButton.jpg" id="on_button-image" class="gwd-img-1lq0">
+  <img src="assets/OffButton.jpg" id="off_button-image" class="gwd-img-1lq0">
+  <img src="assets/AutoButton.jpg" id="auto_button-image" class="gwd-img-1lq0">
+  
+  <img src="assets/Water_Droplet_Pin.PNG" id="Water_Droplet_Image_1" class="gwd-img-p007">
+  <img src="assets/Water_Droplet_Pin.PNG" id="Water_Droplet_Image_2" class="gwd-img-p007 gwd-img-q8gm">
+  <img src="assets/Water_Droplet_Pin.PNG" id="Water_Droplet_Image_3" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh">
+  <img src="assets/Water_Droplet_Pin.PNG" id="Water_Droplet_Image_4" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh gwd-img-3xdb">
+  <img src="assets/Water_Droplet_Pin.PNG" id="Water_Droplet_Image_6" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh gwd-img-3xdb gwd-img-1xat">
+  <img src="assets/Water_Droplet_Pin.PNG" id="Water_Droplet_Image_5" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh gwd-img-3xdb gwd-img-1xat gwd-img-wwx2">
+  
+  <img src="assets/watering.gif" id="Watering_Image_1" class="gwd-img-p007">
+  <img src="assets/watering.gif" id="Watering_Image_2" class="gwd-img-p007 gwd-img-q8gm">
+  <img src="assets/watering.gif" id="Watering_Image_3" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh">
+  <img src="assets/watering.gif" id="Watering_Image_4" class="gwd-img-p007 gon_button-imagewd-img-q8gm gwd-img-i7rh gwd-img-3xdb">
+  <img src="assets/watering.gif" id="Watering_Image_6" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh gwd-img-3xdb gwd-img-1xat">
+  <img src="assets/watering.gif" id="Watering_Image_5" class="gwd-img-p007 gwd-img-q8gm gwd-img-i7rh gwd-img-3xdb gwd-img-1xat gwd-img-wwx2">
+
+
+</body>
+
+</html>
